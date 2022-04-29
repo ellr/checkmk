@@ -291,6 +291,17 @@ class GraphApiClient(BaseApiClient):
     def organization(self):
         return self._get("organization", key="value")
 
+    def applications(self):
+        apps = self._get("applications", key="value")
+
+        # only return certain keys of the dict
+        key_subset = {'id', 'appId', 'displayName', 'passwordCredentials'}
+        apps_selected = [{k: app[k] for k in key_subset}
+                         for app in apps
+                         if app['passwordCredentials']]
+
+        return apps_selected
+
 
 class MgmtApiClient(BaseApiClient):
     def __init__(self, subscription):
@@ -756,6 +767,10 @@ def write_section_ad(graph_client):
     # organization
     orgas = graph_client.organization()
     section.add(["ad_connect", json.dumps(orgas)])
+
+    # app registration with client secrets
+    apps = graph_client.applications()
+    section.add(["app_registrations", json.dumps(apps)])
 
     section.write()
 
